@@ -1,0 +1,275 @@
+Implemente las siguientes funciones que realizan optimizaciones de distintos métodos, cada función tiene sus parametros y salidas que en general son un valor de x y un dataframe
+
+Quiero crear una interfaz grafica usando tkinter que permita hacer llamados a las funciones pasandoles los parametros que escriba el usuario y que despues de llamar a la función se muestren los resultado, el valor del x que se obtuvo para las funciones que retornen el x y la representación del dataframe en tabla, la tabla debe ser una ventana adicional a la donde se escriben los parametros pero el valor de x si debe salir en la ventana donde se ponen los parametros y para el caso donde no se tenga x ese campo se deja vacio
+
+Ademas de Mostrar los resultados quiero tener una representación grafica de la función que se va a evaluar para eso quiero que al momento de hacer el calculo también se creen dos graficas usando matplotlib, la primera para la función que se le pasa a la función de optimización y la segunda es dedicada a los valores en la columna de Error del data frame para los dataframe que la tengan estos dos graficos deben ser ventanas separadas a la principal donde se definen los parametros
+
+crea una interfaz simple que cumpla con los propositos no me importa la estetica y ten en cuenta que el grafico para la función de aleatoria debe de ser en 3d
+
+ten en cuenta que no debes escribir nuevamente las funciones ya que yo realizare la importación de cada una las puedes simplemente llamar 
+
+ademas debes recivir la función como un string desde el usuario luego con sympy tranformarla en una función de numpy y pasarla asi para todos los métodos menos el de newton porque a esa se la debes pasar como una función de sympy para que se le calculen las derivadas
+
+###
+def aleatorio(lim_x, lim_y, iterations, f):
+    xu, xl = lim_x
+    yu, yl = lim_y
+    rows = []
+
+    max_f, maxx, maxy = 1e-9, 0, 0
+    for _ in range(iterations):
+        r = np.random.random()
+        current_x = xl+(xu-xl)*r
+        current_y = yl+(yu-yl)*r
+        current_f = f(current_x, current_y)
+        rows.append([maxx, maxy, max_f, r, current_x, current_y, current_f])
+        if current_f > max_f: 
+            max_f = current_f
+            maxx = current_x
+            maxy = current_y
+    df = pd.DataFrame(rows, columns=["Max x", "Max y", "Max f(x,y)", "r", "current x", "current y", "current f(x,y)"])
+    return df
+# x, y = sp.symbols("x y")
+# f_str = sp.sympify("y -x -2*x**2 - 2*x*y -y**2")
+# np_f = sp.lambdify([x, y], f_str, "numpy")
+# df = aleatorio((2,-2), (3, 1), 1000, np_f)
+# print(df)
+###
+
+###
+def biseccion(function, xu, xl, error):
+    if function(xu) * function(xl) > 0:
+        return None, None
+
+        # Inicializar el dataframe
+    df = pd.DataFrame(
+            columns=["xu", "xl", "xr", "f(xu)", "f(xl)", "f(xr)", "f(xl)f(xr)", "Error"]
+    )
+
+    xr = (xl + xu) / 2
+    fxu = function(xu)
+    fxl = function(xl)
+    fxr = function(xr)
+
+    fxl_xu = fxl * fxr
+    error_actual = xu - xr
+
+    df.loc[len(df)] = [xu, xl, xr, fxu, fxl, fxr, fxl_xu, error_actual]
+
+    while error_actual > error:
+        if fxl_xu < 0:
+            xu = xr
+        elif fxl_xu > 0:
+            xl = xr
+        elif fxl_xu == 0:
+            return xr, df
+
+        xr = (xl + xu) / 2
+        fxu = function(xu)
+        fxl = function(xl)
+        fxr = function(xr)
+
+        fxl_xu = fxl * fxr
+        error_actual = xu - xr
+
+        df.loc[len(df)] = [xu, xl, xr, fxu, fxl, fxr, fxl_xu, error_actual]
+
+    return xr, df
+# func_str = input("Escriba la función: ")
+# x = sp.symbols("x")
+# f = sp.sympify(func_str)
+# np_f = sp.lambdify(x, f, "numpy")
+# # f = lambda x: 3*x**2 - 120*x + 100
+# error = 0.000001
+# # xr, df = biseccion(np_f, 45, 35, error)
+# xr, df = biseccion(np_f, 1, 0, error)
+#
+###
+
+###
+def falsa_posicion(funcion, xu, xl, error):
+    if funcion(xu) * funcion(xl) >= 0:
+        print("La función no cambia de signo en el intervalo dado.")
+        return None, None
+    df = pd.DataFrame(columns=["xu", "xl", "xr", "f(xr)", "Error"])
+    xr = xu - (funcion(xu) * (xl - xu)) / (funcion(xl) - funcion(xu))
+    decicion = funcion(xr) * funcion(xl)
+    while xu - xr > error:
+        if decicion < 0:
+            xu = xr
+        elif decicion > 0:
+            xl = xr
+        else:
+            print("xr es la raíz exacta.")
+            return xr, df
+        xr = xu - (funcion(xu) * (xl - xu)) / (funcion(xl) - funcion(xu))
+        decicion = funcion(xr) * funcion(xl)
+    return xr, df
+# func_str = input("Escriba la función: ")
+# x = sp.symbols("x")
+# f = sp.sympify(func_str)
+# np_f = sp.lambdify(x, func_str, "numpy")
+# xr1, df1 = falsa_posicion(np_f, 4, 0, 0.01)
+# xr2, df2 = falsa_posicion(np_f, 41, 15, 0.01)
+#
+# print(xr1, xr2)
+###
+
+###
+def interpolacion_cuadratica(x0, x1, x2, f, error, mode=1):
+    iteraciones = []
+    while True:
+        fx0, fx1, fx2 = f(x0), f(x1), f(x2)
+        numerador = (
+            fx0 * (x1**2 - x2**2) + fx1 * (x2**2 - x0**2) + fx2 * (x0**2 - x1**2)
+        )
+        denominador = 2 * fx0 * (x1 - x2) + 2 * fx1 * (x2 - x0) + 2 * fx2 * (x0 - x1)
+
+        # Verificar si el denominador es cero antes de realizar la división
+        if denominador == 0:
+            raise ValueError(
+                "Denominador es cero, no se puede continuar con la interpolación."
+            )
+
+        x3 = numerador / denominador
+        fx3 = f(x3)
+        error_actual = abs(x3 - x1)
+
+        # Guardar la iteración actual
+        iteraciones.append([x0, x1, x2, x3, fx0, fx1, fx2, fx3, error_actual])
+
+        match mode:
+            case 1:
+                if x3 >= x1 and fx3 > fx1:
+                    x0 = x1
+                    x1 = x3
+                elif x3 >= x1 and fx3 < fx1:
+                    x2 = x3
+                elif x3 < x1 and fx3 < fx1:
+                    x0 = x3
+                elif x3 < x1 and fx3 > fx1:
+                    x2 = x1
+                    x1 = x3
+            case 2:
+                if x3 >= x1 and fx3 < fx1:
+                    x0 = x1
+                    x1 = x3
+                elif x3 >= x1 and fx3 > fx1:
+                    x2 = x3
+                elif x3 < x1 and fx3 > fx1:
+                    x0 = x3
+                elif x3 < x1 and fx3 < fx1:
+                    x2 = x1
+                    x1 = x3
+
+        if error_actual <= error:
+            break
+    return x3, pd.DataFrame(
+        iteraciones,
+        columns=["x0", "x1", "x2", "x3", "f(x0)", "f(x1)", "f(x2)", "f(x3)", "Error"],
+    )
+
+# func_str = input("Escriba la función: ")
+# f = sp.sympify(func_str)
+# x = sp.symbols("x")
+# np_f = sp.lambdify(x, func_str, "numpy")
+#
+# data = interpolacion_cuadratica(-4, 0, 4, np_f, 0.0000001, 2)
+# print(data)
+###
+
+###
+def newton(function, initial_value, mode, error):
+    function_first_derivate = sp.diff(function, x)
+    function_second_derivate = sp.diff(function, x, 2)
+
+    np_function = sp.lambdify(x, function, "numpy")
+    np_function_first_derivate = sp.lambdify(x, function_first_derivate, "numpy")
+    np_function_second_derivate = sp.lambdify(x, function_second_derivate, "numpy")
+
+    match mode:
+        case 0:
+            raiz = initial_value
+            rows = []
+            while True:
+                fd0 = np_function(raiz)
+                fd1 = np_function_first_derivate(raiz)
+                fd2 = np_function_second_derivate(raiz)
+                last_raiz = raiz
+                raiz -= np_function(raiz) / np_function_first_derivate(raiz)
+                actual_error = abs(last_raiz - raiz)
+                rows.append([last_raiz, fd0, fd1, fd2, actual_error])
+                if actual_error < error:
+                    break
+            return raiz, pd.DataFrame(rows, columns=["x", "f(x)", "f'(x)", "f''(x)", "Error"])
+
+        case 1:
+            max_x = initial_value
+            rows = []
+            while True:
+                fd0 = np_function(max_x)
+                fd1 = np_function_first_derivate(max_x)
+                fd2 = np_function_second_derivate(max_x)
+                last_max_x = max_x
+                max_x -= fd1 / fd2
+                actual_error = abs(last_max_x - max_x)
+                rows.append([last_max_x, fd0, fd1, fd2, actual_error])
+                if actual_error < error:
+                    break
+            return max_x, pd.DataFrame(rows, columns=["x", "f(x)", "f'(x)", "f''(x)", "Error"])
+
+# x = sp.symbols("x")
+# try:
+#     function = input("Escriba la función: ")
+#     sp.pprint(sp.sympify(function))
+# except sp.SympifyError as e:
+#     print(f"error: {e}")
+#
+# newton(function, 2.5, 2, 0.0001)
+###
+
+###
+def seccion_dorada(f, xu, xl, error, mode=1):
+    PHI = (1+np.sqrt(5))/2
+    interaciones = []
+    PHI = (1+np.sqrt(5))/2
+    CONSTANT = 1/PHI
+    d = CONSTANT*(xu-xl)
+    x1 = xl+d
+    x2 = xu-d
+    error_actual = abs(x1-x2)
+    fx1 = f(x1)
+    fx2 = f(x2)
+    decision = fx2 > fx1
+    interaciones.append([xl, xu, d, x1, x2, fx1, fx2, "f(x2)>f(x1)" if decision else "f(x2)<f(x1)", error_actual])
+    while(error_actual > error):
+        match mode:
+            case 1:
+                if decision:
+                    xu = x1
+                else:
+                    xl = x2
+            case 2:
+                if not decision:
+                    xu = x1
+                else:
+                    xl = x2
+        d = CONSTANT*(xu-xl)
+        x1 = xl+d
+        x2 = xu-d
+        error_actual = abs(x1-x2)
+        fx1 = f(x1)
+        fx2 = f(x2)
+        decision = fx2 > fx1
+        interaciones.append([xl, xu, d, x1, x2, fx1, fx2, "f(x2)>f(x1)" if decision else "f(x2)<f(x1)", error_actual])
+    df = pd.DataFrame(interaciones, columns=["XL", "XU", "d", "X1", "X2", "F(X1)", "F(X2)", "Evaluacion", "Error"])
+    return df
+
+# func_str = input("Escriba la función: ")
+# x = sp.symbols("x")
+# f = sp.sympify(func_str)
+# np_f = sp.lambdify(x, f, "numpy")
+#
+# data = seccion_dorada(np_f, 4, -4, 0.00001, 1)
+# print(data)
+###
