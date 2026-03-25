@@ -288,10 +288,11 @@ def tab_seccion_dorada(nb):
     xl_v   = make_field(frm, "xl:",    2, "-4")
     err_v  = make_field(frm, "Error:", 3, "0.00001")
     mode_v = make_field(frm, "Mode (1=max, 2=min):", 4, "1")
+    res_var = result_row(frm, 5)
     # Sección dorada no devuelve x directo, dejamos vacío
-    tk.Label(frm, text="Resultado x:").grid(row=5, column=0, sticky="e", padx=4)
-    tk.Entry(frm, state="readonly", width=28,
-             readonlybackground="#e8f4e8").grid(row=5, column=1, sticky="w", padx=4)
+    # tk.Label(frm, text="Resultado x:").grid(row=5, column=0, sticky="e", padx=4)
+    # tk.Entry(frm, state="readonly", width=28,
+    #          readonlybackground="#e8f4e8").grid(row=5, column=1, sticky="w", padx=4)
 
     def run():
         try:
@@ -300,7 +301,8 @@ def tab_seccion_dorada(nb):
             xu, xl = float(xu_v.get()), float(xl_v.get())
             err  = float(err_v.get())
             mode = int(mode_v.get())
-            df = seccion_dorada(np_f, xu, xl, err, mode)
+            xr, df = seccion_dorada(np_f, xu, xl, err, mode)
+            res_var.set(f"{xr:.8g}")
             show_dataframe(frm.winfo_toplevel(), df, "Sección Dorada – Tabla")
             plot_1d(frm.winfo_toplevel(), func_str, (min(xl, xu)-1, max(xl, xu)+1), "Sección Dorada")
             plot_error(frm.winfo_toplevel(), df, "Sección Dorada")
