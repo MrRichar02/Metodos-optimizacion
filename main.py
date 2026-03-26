@@ -9,6 +9,7 @@ from tkinter import ttk, messagebox
 import numpy as np
 import sympy as sp
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -99,9 +100,12 @@ def plot_error(parent, df, title="Error por iteración"):
 def plot_3d(parent, func_str, x_range=(-5, 5), y_range=(-5, 5), title="Función 3D"):
     """Gráfica 3D de una función de dos variables."""
     try:
+        lower_lim = -1*max([abs(x_range[0]), abs(y_range[0])])
+        upper_lim = max([abs(x_range[1]), abs(y_range[1])])
+
         np_f = parse_numpy_2d(func_str)
-        xs = np.linspace(x_range[0], x_range[1], 60)
-        ys = np.linspace(y_range[0], y_range[1], 60)
+        xs = np.linspace(lower_lim, upper_lim, 60)
+        ys = np.linspace(lower_lim, upper_lim, 60)
         X, Y = np.meshgrid(xs, ys)
         Z = np_f(X, Y)
 
@@ -117,7 +121,6 @@ def plot_3d(parent, func_str, x_range=(-5, 5), y_range=(-5, 5), title="Función 
         canvas.get_tk_widget().pack(fill="both", expand=True)
     except Exception as e:
         messagebox.showerror("Error gráfica 3D", str(e), parent=parent)
-
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Frame genérico con campo de resultado x
@@ -155,8 +158,8 @@ def tab_aleatorio(nb):
         try:
             func_str = f_var.get()
             np_f = parse_numpy_2d(func_str)
-            lim_x = (float(xmax_v.get()), float(xmin_v.get()))
-            lim_y = (float(ymax_v.get()), float(ymin_v.get()))
+            lim_x = (float(xmin_v.get()), float(xmax_v.get()))
+            lim_y = (float(ymin_v.get()), float(ymax_v.get()))
             iters = int(iter_v.get())
             df = aleatorio(lim_x, lim_y, iters, np_f)
             best = df.iloc[-1]
@@ -201,10 +204,10 @@ def tab_biseccion(nb):
 
 def tab_falsa_posicion(nb):
     frm = ttk.Frame(nb); nb.add(frm, text="Falsa Posición")
-    f_var  = make_field(frm, "f(x):",  0, "x**3 - 6*x**2 + 11*x - 6")
-    xu_v   = make_field(frm, "xu:",    1, "4")
-    xl_v   = make_field(frm, "xl:",    2, "0")
-    err_v  = make_field(frm, "Error:", 3, "0.01")
+    f_var  = make_field(frm, "f(x):",  0, "3*x**2-120*x+100")
+    xu_v   = make_field(frm, "xu:",    1, "20")
+    xl_v   = make_field(frm, "xl:",    2, "-10")
+    err_v  = make_field(frm, "Error:", 3, "0.000001")
     res_var = result_row(frm, 4)
 
     def run():
@@ -230,7 +233,7 @@ def tab_falsa_posicion(nb):
 
 def tab_interpolacion(nb):
     frm = ttk.Frame(nb); nb.add(frm, text="Interpolación Cuadrática")
-    f_var  = make_field(frm, "f(x):",   0, "-x**2 + 10*x")
+    f_var  = make_field(frm, "f(x):",   0, "2*sin(x)-x**2/10")
     x0_v   = make_field(frm, "x0:",     1, "-4")
     x1_v   = make_field(frm, "x1:",     2, "0")
     x2_v   = make_field(frm, "x2:",     3, "4")
@@ -257,10 +260,10 @@ def tab_interpolacion(nb):
 
 def tab_newton(nb):
     frm = ttk.Frame(nb); nb.add(frm, text="Newton")
-    f_var   = make_field(frm, "f(x):",           0, "x**3 - 2*x - 5")
+    f_var   = make_field(frm, "f(x):",           0, "2*sin(x)-x**2/10")
     xi_v    = make_field(frm, "Valor inicial:",   1, "2.5")
     mode_v  = make_field(frm, "Mode (0=raíz, 1=optim):", 2, "0")
-    err_v   = make_field(frm, "Error:",           3, "0.0001")
+    err_v   = make_field(frm, "Error:",           3, "0.00001")
     res_var = result_row(frm, 4)
 
     def run():
@@ -283,10 +286,10 @@ def tab_newton(nb):
 
 def tab_seccion_dorada(nb):
     frm = ttk.Frame(nb); nb.add(frm, text="Sección Dorada")
-    f_var  = make_field(frm, "f(x):",  0, "-x**2 + 10*x")
+    f_var  = make_field(frm, "f(x):",  0, "2*sin(x)-x**2/10")
     xu_v   = make_field(frm, "xu:",    1, "4")
     xl_v   = make_field(frm, "xl:",    2, "-4")
-    err_v  = make_field(frm, "Error:", 3, "0.00001")
+    err_v  = make_field(frm, "Error:", 3, "0.0000001")
     mode_v = make_field(frm, "Mode (1=max, 2=min):", 4, "1")
     res_var = result_row(frm, 5)
     # Sección dorada no devuelve x directo, dejamos vacío
@@ -320,6 +323,13 @@ def main():
     root = tk.Tk()
     root.title("Métodos de Optimización Numérica")
     root.resizable(False, False)
+
+    def on_main_window_close():
+        plt.close("all")          
+        root.quit()               
+        root.destroy()            
+
+    root.protocol("WM_DELETE_WINDOW", on_main_window_close)
 
     nb = ttk.Notebook(root)
     nb.pack(fill="both", expand=True, padx=8, pady=8)

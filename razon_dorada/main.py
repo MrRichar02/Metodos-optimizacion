@@ -35,7 +35,7 @@ def seccion_dorada(f, xu, xl, error, mode=1):
         decision = fx2 > fx1
         interaciones.append([xl, xu, d, x1, x2, fx1, fx2, "f(x2)>f(x1)" if decision else "f(x2)<f(x1)", error_actual])
     df = pd.DataFrame(interaciones, columns=["XL", "XU", "d", "X1", "X2", "F(X1)", "F(X2)", "Evaluacion", "Error"])
-    return x1, df
+    return (xu+xl)/2, df
 
 # func_str = input("Escriba la función: ")
 # x = sp.symbols("x")
