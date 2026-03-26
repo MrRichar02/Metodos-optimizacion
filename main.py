@@ -152,7 +152,8 @@ def tab_aleatorio(nb):
     ymin_v  = make_field(frm, "y_lower:",       3, "1")
     ymax_v  = make_field(frm, "y_upper:",       4, "3")
     iter_v  = make_field(frm, "Iteraciones:",   5, "1000")
-    res_var = result_row(frm, 6)
+    mode_v  = make_field(frm, "Mode (1=max, 2=min):", 6, "1")  # Campo para modo
+    res_var = result_row(frm, 7)
 
     def run():
         try:
@@ -161,18 +162,29 @@ def tab_aleatorio(nb):
             lim_x = (float(xmin_v.get()), float(xmax_v.get()))
             lim_y = (float(ymin_v.get()), float(ymax_v.get()))
             iters = int(iter_v.get())
-            df = aleatorio(lim_x, lim_y, iters, np_f)
+            mode = int(mode_v.get())  # Obtener modo
+            
+            df = aleatorio(lim_x, lim_y, iters, np_f, mode)
             best = df.iloc[-1]
-            res_var.set(f"x={best['Max x']:.6g}, y={best['Max y']:.6g}")
+            
+            # Mostrar resultado según el modo
+            if mode == 1:
+                res_var.set(f"Máximo: x={best['Best x']:.6g}, y={best['Best y']:.6g}, f={best['Best f(x,y)']:.6g}")
+            else:
+                res_var.set(f"Mínimo: x={best['Best x']:.6g}, y={best['Best y']:.6g}, f={best['Best f(x,y)']:.6g}")
+            
             show_dataframe(frm.winfo_toplevel(), df, "Aleatorio – Tabla")
+            
             # rango para gráfica 3d tomado de los límites
             x_range = (float(xmin_v.get()), float(xmax_v.get()))
             y_range = (float(ymin_v.get()), float(ymax_v.get()))
             plot_3d(frm.winfo_toplevel(), func_str, x_range, y_range, "Aleatorio")
+            
+            
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
-    tk.Button(frm, text="Calcular", command=run).grid(row=7, column=0, columnspan=2, pady=6)
+    tk.Button(frm, text="Calcular", command=run).grid(row=8, column=0, columnspan=2, pady=6)
 
 def tab_biseccion(nb):
     frm = ttk.Frame(nb); nb.add(frm, text="Bisección")

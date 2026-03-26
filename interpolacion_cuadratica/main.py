@@ -12,11 +12,11 @@ def interpolacion_cuadratica(x0, x1, x2, f, error, mode=1):
         fx0, fx1, fx2 = f(x0), f(x1), f(x2)
 
         # verificar que no se pase del rango
-        if mode == 1:  
-            if not (fx0 < fx1 > fx2):
-                raise ValueError(f"El intervalo [{x0}, {x2}] no contiene un máximo. "
-                               f"f({x0})={fx0}, f({x1})={fx1}, f({x2})={fx2}. "
-                               "Se requiere f(x0) < f(x1) > f(x2)")
+        # if mode == 1:  
+        #     if not (fx0 < fx1 > fx2):
+        #         raise ValueError(f"El intervalo [{x0}, {x2}] no contiene un máximo. "
+        #                        f"f({x0})={fx0}, f({x1})={fx1}, f({x2})={fx2}. "
+        #                        "Se requiere f(x0) < f(x1) > f(x2)")
 
         numerador = (
             fx0 * (x1**2 - x2**2) + fx1 * (x2**2 - x0**2) + fx2 * (x0**2 - x1**2)
