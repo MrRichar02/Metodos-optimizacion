@@ -144,6 +144,7 @@ def result_row(parent, row):
 # Pestañas de cada método
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 def tab_aleatorio(nb):
     frm = ttk.Frame(nb); nb.add(frm, text="Aleatorio")
     f_var   = make_field(frm, "f(x,y):",       0, "y - x - 2*x**2 - 2*x*y - y**2")
@@ -152,35 +153,25 @@ def tab_aleatorio(nb):
     ymin_v  = make_field(frm, "y_lower:",       3, "1")
     ymax_v  = make_field(frm, "y_upper:",       4, "3")
     iter_v  = make_field(frm, "Iteraciones:",   5, "1000")
-    mode_v  = make_field(frm, "Mode (1=max, 2=min):", 6, "1")  # Campo para modo
+    mode_v = make_field(frm, "Mode (1=max, 2=min):", 6, "1")
     res_var = result_row(frm, 7)
 
     def run():
         try:
             func_str = f_var.get()
             np_f = parse_numpy_2d(func_str)
-            lim_x = (float(xmin_v.get()), float(xmax_v.get()))
-            lim_y = (float(ymin_v.get()), float(ymax_v.get()))
+            lim_x = (float(xmax_v.get()), float(xmin_v.get()))
+            lim_y = (float(ymax_v.get()), float(ymin_v.get()))
             iters = int(iter_v.get())
-            mode = int(mode_v.get())  # Obtener modo
-            
+            mode = int(mode_v.get())
             df = aleatorio(lim_x, lim_y, iters, np_f, mode)
             best = df.iloc[-1]
-            
-            # Mostrar resultado según el modo
-            if mode == 1:
-                res_var.set(f"Máximo: x={best['Best x']:.6g}, y={best['Best y']:.6g}, f={best['Best f(x,y)']:.6g}")
-            else:
-                res_var.set(f"Mínimo: x={best['Best x']:.6g}, y={best['Best y']:.6g}, f={best['Best f(x,y)']:.6g}")
-            
+            res_var.set(f"x={best.iloc[0]:.6g}, y={best.iloc[1]:.6g}")
             show_dataframe(frm.winfo_toplevel(), df, "Aleatorio – Tabla")
-            
             # rango para gráfica 3d tomado de los límites
             x_range = (float(xmin_v.get()), float(xmax_v.get()))
             y_range = (float(ymin_v.get()), float(ymax_v.get()))
             plot_3d(frm.winfo_toplevel(), func_str, x_range, y_range, "Aleatorio")
-            
-            
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
